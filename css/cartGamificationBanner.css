@@ -1,0 +1,46 @@
+.cart-gamification-banner {
+    overflow-y: hidden;
+    display: none;
+}
+
+.cart-gamification-banner__active {
+    height: 35px;
+    display: block;
+}
+
+.cart-gamification-banner__item {
+    position: relative;
+    height: 35px;
+    width: 100%;
+    transition: margin 1.5s ease-in-out;
+}
+.cart-gamification-banner__text, .cart-gamification-banner__initial-background, .cart-gamification-banner__progress-background {
+    height: 35px;
+}
+.cart-gamification-banner__text, .cart-gamification-banner__initial-background {
+    width: 100%;
+}
+.cart-gamification-banner__text, .cart-gamification-banner__progress-background {
+    position: absolute;
+}
+.cart-gamification-banner__progress-background {
+    transition: width 1s ease-out;
+    background-repeat: repeat-x;
+    background-size: auto 35px;
+    z-index: 1;
+}
+.cart-gamification-banner__text {
+    z-index: 2;
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.cart-gamification-banner__text span {
+    width: 95%;
+    text-align: center;
+}
+.cart-gamification-banner__icon {
+    width: 20px !important;
+    margin-right: 10px;
+}
