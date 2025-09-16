@@ -6035,3 +6035,17 @@ $(function () {
 
 
 <div id="backdrop" style="display: none;"> </div></body></html>
+<!-- Modal Carrinho -->
+<div id="cartModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:20px;border-radius:12px;max-width:500px;width:90%">
+    <h2>Produto adicionado!</h2>
+    <button onclick="location.href='checkout/checkout.html'">Ir para Checkout</button>
+    <button onclick="document.getElementById('cartModal').style.display='none'">Continuar comprando</button>
+  </div>
+</div>
+
+<script>
+function abrirCarrinho(){
+  document.getElementById("cartModal").style.display="flex";
+}
+</script>

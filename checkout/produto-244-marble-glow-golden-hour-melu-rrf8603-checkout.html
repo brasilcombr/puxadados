@@ -1,121 +1,94 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Checkout</title>
-<style>
-  :root {
-    --bg:#f7f8fa;
-    --card:#fff;
-    --accent:#ff4d87;
-    --accent-dark:#e04378;
-    --success:#28a745;
-    --muted:#7b7b7b;
-    --shadow:0 8px 30px rgba(16,24,40,0.06);
-    --radius:14px;
-    font-family:"Inter","Segoe UI",Arial,sans-serif;
-  }
-  html,body{height:100%;margin:0;background:var(--bg);}
-  .wrap{max-width:960px;margin:24px auto;padding:18px;}
-  header{margin-bottom:20px}
-  header a{text-decoration:none;font-weight:bold;font-size:18px;color:var(--accent);}
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:row;}
-  .left{flex:1;padding:26px 28px}
-  .right{width:360px;border-left:1px solid #f0f0f3;padding:26px 22px;background:linear-gradient(180deg,#fff,#fcfcfc)}
-  @media (max-width:850px){.card{flex-direction:column}.right{width:100%;border-left:none;border-top:1px solid #f0f0f3}}
-  .stepper{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
-  .step{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px}
-  .step .dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #eee;color:#666;font-weight:700}
-  .step.active{color:var(--accent);background:rgba(255,77,135,0.06)}
-  .step.active .dot{background:var(--accent);color:white;border:none}
-  h1{font-size:20px;margin:0 0 6px}
-  .subtitle{color:var(--muted);margin-bottom:16px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-  @media (max-width:520px){.grid{grid-template-columns:1fr}}
-  label{display:block;font-size:13px;color:#333;margin-bottom:6px}
-  input{width:100%;padding:12px;border-radius:10px;border:1px solid #e6e6e9;background:#fff;font-size:14px;box-sizing:border-box}
-  .btn{padding:12px 16px;border-radius:10px;border:none;background:var(--accent);color:white;font-weight:700;cursor:pointer}
-  .btn.ghost{background:#fff;color:var(--accent);border:2px solid #fde5ee}
-  .btn.full{width:100%;font-size:16px;padding:14px}
-  .pay-grid{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
-  .pay-opt{flex:1;min-width:140px;border-radius:12px;padding:12px;background:#fafafa;border:1px solid #f0f0f3;cursor:pointer;display:flex;align-items:center;gap:12px}
-  .pay-opt.selected{border-color:var(--accent);box-shadow:0 6px 18px rgba(224,67,120,0.06);background:#fff}
-  .pay-icon{width:46px;height:46px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;border:1px solid #eee;font-size:20px}
-  .summary-title{font-weight:700;color:#333;margin-bottom:8px}
-  .product-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-  .thumb{width:76px;height:76px;border-radius:10px;object-fit:cover;border:1px solid #eee}
-  .price{font-weight:800;color:#111;font-size:18px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Checkout</title>
+  <style>
+    :root {
+      --bg:#f7f7fa;
+      --card:#fff;
+      --accent:#ff4d87;
+      --accent-dark:#e04378;
+      --muted:#666;
+      --shadow:0 6px 24px rgba(0,0,0,0.08);
+      --radius:14px;
+      font-family:"Inter","Segoe UI",Arial,sans-serif;
+    }
+    body {margin:0;background:var(--bg);}
+    .wrap{max-width:960px;margin:40px auto;padding:0 16px;}
+    header{margin-bottom:20px}
+    header a{text-decoration:none;font-weight:bold;font-size:18px;color:var(--accent);}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;}
+    .steps{display:flex;gap:10px;margin-bottom:20px;}
+    .step{flex:1;text-align:center;padding:12px;border-radius:10px;background:#f2f2f2;color:#777;font-weight:600;}
+    .step.active{background:var(--accent);color:#fff;}
+    h1{font-size:22px;margin:0 0 14px;}
+    .product-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    .product-row img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid #ddd;}
+    .price{font-weight:700;font-size:16px;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;}
+    label{font-size:13px;color:#333;font-weight:600;display:block;margin-bottom:6px;}
+    input{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;font-size:15px;box-sizing:border-box;}
+    .btn{margin-top:20px;background:var(--accent);color:#fff;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:0.2s;}
+    .btn:hover{background:var(--accent-dark);}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <a href="https://brasilcombr.github.io/puxadados/">← Voltar para Loja</a>
-  </header>
-  <div class="card">
-    <div class="left">
-      <div class="stepper">
-        <div class="step active" data-step="1"><div class="dot">1</div>Dados</div>
-        <div class="step" data-step="2"><div class="dot">2</div>Endereço</div>
-        <div class="step" data-step="3"><div class="dot">3</div>Pagamento</div>
-      </div>
-      <div id="stepContent">
-        <section data-step="1" class="step-section">
-          <h1>Dados Pessoais</h1>
-          <div class="grid">
-            <div><label>Nome completo</label><input id="nome"></div>
-            <div><label>Email</label><input id="email" type="email"></div>
-          </div>
-          <div class="grid"><div><label>Telefone</label><input id="tel" type="tel"></div></div>
-          <div style="margin-top:18px"><button class="btn" onclick="nextStep()">Próximo</button></div>
-        </section>
-        <section data-step="2" class="step-section" style="display:none">
-          <h1>Endereço</h1>
-          <div><label>Rua</label><input id="rua"></div>
-          <div class="grid"><div><label>Número</label><input id="num"></div><div><label>Bairro</label><input id="bairro"></div></div>
-          <div class="grid"><div><label>Cidade</label><input id="cidade"></div><div><label>Estado</label><input id="estado"></div></div>
-          <div class="grid"><div><label>CEP</label><input id="cep"></div></div>
-          <div style="margin-top:18px;display:flex;gap:10px">
-            <button class="btn ghost" onclick="prevStep()">Voltar</button>
-            <button class="btn" onclick="nextStep()">Próximo</button>
-          </div>
-        </section>
-        <section data-step="3" class="step-section" style="display:none">
-          <h1>Pagamento</h1>
-          <p class="subtitle">Frete grátis aplicado automaticamente.</p>
-          <div class="pay-grid">
-            <div class="pay-opt" data-pay="pix" onclick="selectPay(this)"><div class="pay-icon">⚡</div><div><strong>Pix (5% OFF)</strong></div></div>
-            <div class="pay-opt" data-pay="cartao" onclick="selectPay(this)"><div class="pay-icon">💳</div><div><strong>Cartão</strong></div></div>
-          </div>
-          <div id="payFormArea" style="margin-top:18px"></div>
-          <div style="margin-top:18px"><button class="btn" onclick="finalize()">Finalizar</button></div>
-        </section>
-      </div>
-    </div>
-    <aside class="right">
-      <div>
-        <div class="summary-title" id="prodName">Produto</div>
-        <div class="product-row">
-          <img id="prodThumb" class="thumb" src="../img/produto.png">
-          <div><div class="price" id="prodPrice">R$ 0,00</div></div>
-        </div>
-      </div>
-    </aside>
-  </div>
-</div>
-<script>
-let currentStep=1, selectedPay=null;
-function updateSteps(){document.querySelectorAll('.step').forEach(el=>{el.classList.toggle('active', Number(el.dataset.step)===currentStep)});document.querySelectorAll('.step-section').forEach(sec=>{sec.style.display=Number(sec.dataset.step)===currentStep?'':'none'})}
-function nextStep(){if(currentStep<3){currentStep++;updateSteps();}}
-function prevStep(){if(currentStep>1){currentStep--;updateSteps();}}
-function selectPay(el){document.querySelectorAll('.pay-opt').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');selectedPay=el.dataset.pay;document.getElementById('payFormArea').innerHTML=selectedPay==='cartao'?"<p>Formulário de cartão aqui...</p>":"<p>Use o QR Pix gerado.</p>";}
-function finalize(){if(!selectedPay){alert("Escolha uma forma de pagamento");return;}alert("Pedido confirmado! Obrigado.");}
+  <div class="wrap">
+    <header>
+      <a href="index.html">← Voltar para Loja</a>
+    </header>
 
+    <div class="card">
+      <div class="steps">
+        <div class="step active">1. Dados</div>
+        <div class="step">2. Endereço</div>
+        <div class="step">3. Pagamento</div>
+      </div>
+
+      <h1>Resumo do Pedido</h1>
+      <div id="resumo"></div>
+
+      <h1>Seus Dados</h1>
+      <div class="grid">
+        <div><label>Nome</label><input type="text" id="nome"></div>
+        <div><label>Email</label><input type="email" id="email"></div>
+        <div><label>Telefone</label><input type="tel" id="tel"></div>
+        <div><label>CPF</label><input type="text" id="cpf"></div>
+      </div>
+
+      <button class="btn" onclick="nextStep()">Próximo</button>
+    </div>
+  </div>
+
+  <script>
+    // Puxa carrinho
+    let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+    const resumo = document.getElementById("resumo");
+
+    if(carrinho.length === 0){
+      resumo.innerHTML = "<p>Carrinho vazio.</p>";
+    } else {
+      carrinho.forEach(prod => {
+        resumo.innerHTML += `
+          <div class="product-row">
+            <img src="img/${prod.img}" alt="">
+            <div>
+              <div>${prod.nome}</div>
+              <div class="price">${prod.preco}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function nextStep(){
+      alert("Aqui vai para a próxima etapa (endereço e depois pagamento).");
+    }
+  
 /* Produto injetado */
-document.getElementById("prodName").innerText = "Produto";
-document.getElementById("prodPrice").innerText = "R$ 0,00";
-document.getElementById("prodThumb").src = "../img/17314161656664.png";
+localStorage.setItem("carrinho", JSON.stringify([{ nome: "Produto", preco: "R$ 0,00", img: "17314161656664.png"}]));
 </script>
 </body>
 </html>
