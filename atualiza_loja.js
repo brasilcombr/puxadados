@@ -9,7 +9,9 @@ const checkoutDir = path.join(rootDir, "checkout");
 // garante pasta checkout
 if (!fs.existsSync(checkoutDir)) fs.mkdirSync(checkoutDir);
 
-// HTML do checkout
+/* ===============================
+   TEMPLATE DO CHECKOUT
+================================= */
 const checkoutTemplate = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -87,7 +89,6 @@ const checkoutTemplate = `<!DOCTYPE html>
   </div>
 
   <script>
-    // Puxa carrinho
     let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
     const resumo = document.getElementById("resumo");
 
@@ -108,56 +109,129 @@ const checkoutTemplate = `<!DOCTYPE html>
     }
 
     function nextStep(){
-      alert("Aqui vai para a próxima etapa (endereço).");
+      alert("Aqui vai para a próxima etapa (endereço/pagamento).");
     }
   </script>
 </body>
 </html>`;
 
-// percorre produtos e cria checkouts
-fs.readdirSync(produtosDir).forEach(file => {
-  if (!file.endsWith(".html")) return;
-  const filePath = path.join(produtosDir, file);
-  const html = fs.readFileSync(filePath, "utf8");
+/* ===============================
+   TEMPLATE DO CARRINHO
+================================= */
+const carrinhoTemplate = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carrinho</title>
+  <style>
+    body{font-family:"Inter",Arial,sans-serif;margin:0;background:#f7f7fa;}
+    .wrap{max-width:960px;margin:40px auto;padding:0 16px;}
+    header{margin-bottom:20px}
+    header a{text-decoration:none;font-weight:bold;font-size:18px;color:#ff4d87;}
+    h1{margin-bottom:20px}
+    .item{display:flex;align-items:center;gap:12px;background:#fff;padding:12px;margin-bottom:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+    .item img{width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #ddd;}
+    .price{font-weight:700}
+    .btn{background:#ff4d87;color:#fff;padding:10px 14px;border:none;border-radius:8px;cursor:pointer;font-weight:600;margin-top:14px;}
+    .btn:hover{background:#e04378;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><a href="index.html">← Continuar Comprando</a></header>
+    <h1>Seu Carrinho</h1>
+    <div id="lista"></div>
+    <button class="btn" onclick="irCheckout()">Finalizar Compra</button>
+  </div>
+  <script>
+    function render(){
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      const lista = document.getElementById("lista");
+      if(carrinho.length === 0){
+        lista.innerHTML = "<p>Carrinho vazio.</p>";
+        return;
+      }
+      lista.innerHTML = "";
+      carrinho.forEach((prod,idx)=>{
+        lista.innerHTML += \`
+          <div class="item">
+            <img src="img/\${prod.img}">
+            <div style="flex:1">
+              <div>\${prod.nome}</div>
+              <div class="price">\${prod.preco}</div>
+            </div>
+            <button onclick="remover(\${idx})">Remover</button>
+          </div>
+        \`;
+      });
+    }
+    function remover(i){
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      carrinho.splice(i,1);
+      localStorage.setItem("carrinho", JSON.stringify(carrinho));
+      render();
+    }
+    function irCheckout(){
+      window.location.href = "checkout/checkout.html";
+    }
+    render();
+  </script>
+</body>
+</html>`;
 
-  // pega dados
+// salva carrinho.html
+fs.writeFileSync(path.join(rootDir,"carrinho.html"), carrinhoTemplate,"utf8");
+console.log("✔ carrinho.html gerado");
+
+/* ===============================
+   GERA CHECKOUTS DOS PRODUTOS
+================================= */
+fs.readdirSync(produtosDir).forEach(file=>{
+  if(!file.endsWith(".html")) return;
+  const filePath = path.join(produtosDir,file);
+  const html = fs.readFileSync(filePath,"utf8");
+
   const nome = (html.match(/<h1.*?>(.*?)<\/h1>/i) || [, "Produto"])[1].trim();
   const preco = (html.match(/R\$ ?\d+,\d{2}/) || ["R$ 0,00"])[0];
   const img = (html.match(/<img[^>]+src="([^"]+)"/i) || [, "produto.png"])[1].split("/").pop();
 
-  const base = path.basename(file, ".html");
-  const checkoutFile = path.join(checkoutDir, `${base}-checkout.html`);
-
-  let checkoutHtml = checkoutTemplate.replace("</script>", `
+  const base = path.basename(file,".html");
+  const checkoutFile = path.join(checkoutDir,`${base}-checkout.html`);
+  let checkoutHtml = checkoutTemplate.replace("</script>",`
 /* Produto injetado */
 localStorage.setItem("carrinho", JSON.stringify([{nome:"${nome}", preco:"${preco}", img:"${img}"}]));
 </script>`);
+  fs.writeFileSync(checkoutFile,checkoutHtml,"utf8");
+  console.log("✔ Checkout criado:",checkoutFile);
 
-  fs.writeFileSync(checkoutFile, checkoutHtml, "utf8");
-  console.log("✔ Checkout atualizado:", checkoutFile);
-
-  // botão único de comprar
-  const novoBotao = `<a class="btn" href="../checkout/${base}-checkout.html">Comprar</a>`;
-  const atualizado = html.replace(/<a[^>]*>.*?Comprar.*?<\/a>/i, novoBotao);
-  fs.writeFileSync(filePath, atualizado, "utf8");
+  // coloca botões corretos no produto
+  const novoBotao = `
+    <a class="btn" href="../checkout/${base}-checkout.html">Comprar Agora</a>
+    <button class="btn" onclick='adicionarCarrinho({nome:"${nome}", preco:"${preco}", img:"${img}"})'>Adicionar ao Carrinho</button>
+  `;
+  const atualizado = html.replace(/<a[^>]*>.*?Comprar.*?<\/a>/i,novoBotao);
+  fs.writeFileSync(filePath,atualizado,"utf8");
 });
 
-// corrige index.html
-const indexPath = path.join(rootDir, "index.html");
-if (fs.existsSync(indexPath)) {
-  let indexHtml = fs.readFileSync(indexPath, "utf8");
+/* ===============================
+   ATUALIZA INDEX.HTML
+================================= */
+const indexPath = path.join(rootDir,"index.html");
+if(fs.existsSync(indexPath)){
+  let indexHtml = fs.readFileSync(indexPath,"utf8");
 
-  // remove duplicação de scripts antigos
-  indexHtml = indexHtml.replace(/<script id="loja-script">[\s\S]*?<\/script>/, "");
+  // remove scripts duplicados antigos
+  indexHtml = indexHtml.replace(/<script id="loja-script">[\\s\\S]*?<\/script>/g,"");
 
-  // adiciona modal global e pesquisa
-  const modalScript = `
+  // adiciona funções globais
+  const lojaScript = `
 <script id="loja-script">
 function adicionarCarrinho(prod){
   let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
   carrinho.push(prod);
   localStorage.setItem("carrinho", JSON.stringify(carrinho));
-  alert("Produto adicionado!");
+  alert("Produto adicionado ao carrinho!");
 }
 function pesquisarProduto(){
   const termo = document.getElementById("searchInput").value.toLowerCase();
@@ -168,19 +242,20 @@ function pesquisarProduto(){
   });
 }
 </script>`;
-
-  if (!indexHtml.includes("id=\"loja-script\"")) {
-    indexHtml = indexHtml.replace("</body>", modalScript + "\n</body>");
+  if(!indexHtml.includes("id=\"loja-script\"")){
+    indexHtml = indexHtml.replace("</body>", lojaScript + "\n</body>");
   }
 
-  fs.writeFileSync(indexPath, indexHtml, "utf8");
-  console.log("✔ Index atualizado");
+  fs.writeFileSync(indexPath,indexHtml,"utf8");
+  console.log("✔ index.html atualizado");
 }
 
-// faz push pro github (force)
-try {
-  execSync("git add . && git commit -m 'Atualiza loja com checkout e carrinho' && git push origin main --force", {stdio:"inherit"});
+/* ===============================
+   PUSH GITHUB FORCE
+================================= */
+try{
+  execSync("git add . && git commit -m 'Atualiza loja com checkout + carrinho' && git push origin main --force",{stdio:"inherit"});
   console.log("✔ Alterações enviadas pro GitHub com force");
-} catch (err) {
-  console.error("⚠ Erro ao enviar pro GitHub:", err.message);
+}catch(err){
+  console.error("⚠ Erro ao enviar pro GitHub:",err.message);
 }
