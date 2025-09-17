@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout</title>
+  <style>
+    body {
+      font-family: "Inter", Arial, sans-serif;
+      margin: 0;
+      background: #fff0f5;
+      color: #333;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+      font-size: 28px;
+      text-align: center;
+      color: #c2185b;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      color: #880e4f;
+      border-left: 4px solid #e91e63;
+      padding-left: 8px;
+    }
+
+    .section {
+      background: #fff;
+      padding: 24px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(233, 30, 99, 0.15);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #880e4f;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #f8bbd0;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #e91e63;
+      box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.2);
+      outline: none;
+    }
+
+    .resumo-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f8bbd0;
+    }
+
+    .resumo-item img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #f48fb1;
+    }
+
+    .resumo-info {
+      flex: 1;
+    }
+
+    .resumo-info div:first-child {
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #444;
+    }
+
+    .resumo-info strong {
+      color: #d81b60;
+    }
+
+    .total {
+      font-weight: 700;
+      font-size: 18px;
+      margin-top: 12px;
+      text-align: right;
+      color: #c2185b;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #ec407a, #d81b60);
+      color: #fff;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      width: 100%;
+      transition: background 0.3s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, #f06292, #e91e63);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    @media (min-width: 768px) {
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Finalizar Compra</h1>
+
+    <div class="section">
+      <h2>Seus Produtos</h2>
+      <div id="resumo"></div>
+      <div class="total" id="total"></div>
+    </div>
+
+    <div class="section">
+      <h2>Dados Pessoais</h2>
+      <div class="grid-2">
+        <div>
+          <label>Nome completo</label>
+          <input type="text" id="nome" required>
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" id="email" required>
+        </div>
+      </div>
+      <label>Telefone</label>
+      <input type="tel" id="telefone" required>
+    </div>
+
+    <div class="section">
+      <h2>Endereço de Entrega</h2>
+      <label>Endereço</label>
+      <input type="text" id="endereco" required>
+      <div class="grid-2">
+        <div>
+          <label>Cidade</label>
+          <input type="text" id="cidade" required>
+        </div>
+        <div>
+          <label>CEP</label>
+          <input type="text" id="cep" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Pagamento</h2>
+      <select id="pagamento">
+        <option value="pix">PIX</option>
+        <option value="cartao">Cartão de Crédito</option>
+        <option value="boleto">Boleto</option>
+      </select>
+    </div>
+
+    <button class="btn" onclick="finalizar()">Confirmar Pedido</button>
+  </div>
+
+  <script>
+    function carregarResumo(){
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      const resumo = document.getElementById("resumo");
+      let total = 0;
+      resumo.innerHTML = "";
+
+      if(carrinho.length === 0){
+        resumo.innerHTML = "<p>Seu carrinho está vazio.</p>";
+        return;
+      }
+
+      carrinho.forEach(prod => {
+        resumo.innerHTML += `
+          <div class="resumo-item">
+            <img src="img/${prod.img}">
+            <div class="resumo-info">
+              <div>${prod.nome}</div>
+              <div><strong>${prod.preco}</strong></div>
+            </div>
+          </div>
+        `;
+        let precoNum = parseFloat(prod.preco.replace("R$","").replace(",","."));
+        if(!isNaN(precoNum)) total += precoNum;
+      });
+
+      document.getElementById("total").innerHTML = "Total: R$ " + total.toFixed(2);
+    }
+
+    function finalizar(){
+      alert("💖 Pedido confirmado! Obrigado pela compra.");
+      localStorage.removeItem("carrinho");
+      window.location.href = "../index.html";
+    }
+
+    carregarResumo();
+  </script>
+</body>
+</html>
