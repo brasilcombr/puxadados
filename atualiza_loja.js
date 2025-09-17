@@ -9,7 +9,7 @@ const checkoutDir = path.join(rootDir, "checkout");
 // garante pasta checkout
 if (!fs.existsSync(checkoutDir)) fs.mkdirSync(checkoutDir);
 
-// ==================== TEMPLATE CHECKOUT ====================
+// HTML do checkout
 const checkoutTemplate = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -64,10 +64,22 @@ const checkoutTemplate = `<!DOCTYPE html>
 
       <h1>Seus Dados</h1>
       <div class="grid">
-        <div><label>Nome</label><input type="text" id="nome"></div>
-        <div><label>Email</label><input type="email" id="email"></div>
-        <div><label>Telefone</label><input type="tel" id="tel"></div>
-        <div><label>CPF</label><input type="text" id="cpf"></div>
+        <div>
+          <label>Nome</label>
+          <input type="text" id="nome">
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" id="email">
+        </div>
+        <div>
+          <label>Telefone</label>
+          <input type="tel" id="tel">
+        </div>
+        <div>
+          <label>CPF</label>
+          <input type="text" id="cpf">
+        </div>
       </div>
 
       <button class="btn" onclick="nextStep()">Próximo</button>
@@ -96,79 +108,78 @@ const checkoutTemplate = `<!DOCTYPE html>
     }
 
     function nextStep(){
-      alert("Aqui vai para a próxima etapa (endereço e depois pagamento).");
+      alert("Aqui vai para a próxima etapa (endereço).");
     }
   </script>
 </body>
 </html>`;
 
-// ==================== GERA CHECKOUT PARA CADA PRODUTO ====================
+// percorre produtos e cria checkouts
 fs.readdirSync(produtosDir).forEach(file => {
   if (!file.endsWith(".html")) return;
-
   const filePath = path.join(produtosDir, file);
-  let html = fs.readFileSync(filePath, "utf8");
+  const html = fs.readFileSync(filePath, "utf8");
 
   // pega dados
-  const nome = (html.match(/<h1.*?>(.*?)<\/h1>/i) || [,"Produto"])[1].trim();
+  const nome = (html.match(/<h1.*?>(.*?)<\/h1>/i) || [, "Produto"])[1].trim();
   const preco = (html.match(/R\$ ?\d+,\d{2}/) || ["R$ 0,00"])[0];
-  const img = (html.match(/<img[^>]+src="([^"]+)"/i) || [,"produto.png"])[1].split("/").pop();
+  const img = (html.match(/<img[^>]+src="([^"]+)"/i) || [, "produto.png"])[1].split("/").pop();
 
-  // cria checkout
   const base = path.basename(file, ".html");
   const checkoutFile = path.join(checkoutDir, `${base}-checkout.html`);
+
   let checkoutHtml = checkoutTemplate.replace("</script>", `
 /* Produto injetado */
-localStorage.setItem("carrinho", JSON.stringify([{ nome: "${nome}", preco: "${preco}", img: "${img}"}]));
+localStorage.setItem("carrinho", JSON.stringify([{nome:"${nome}", preco:"${preco}", img:"${img}"}]));
 </script>`);
+
   fs.writeFileSync(checkoutFile, checkoutHtml, "utf8");
   console.log("✔ Checkout atualizado:", checkoutFile);
 
-  // coloca botão único
+  // botão único de comprar
   const novoBotao = `<a class="btn" href="../checkout/${base}-checkout.html">Comprar</a>`;
-  html = html.replace(/<a[^>]*>.*?Comprar.*?<\/a>/i, novoBotao);
-  fs.writeFileSync(filePath, html, "utf8");
+  const atualizado = html.replace(/<a[^>]*>.*?Comprar.*?<\/a>/i, novoBotao);
+  fs.writeFileSync(filePath, atualizado, "utf8");
 });
 
-// ==================== CORRIGE INDEX ====================
+// corrige index.html
 const indexPath = path.join(rootDir, "index.html");
 if (fs.existsSync(indexPath)) {
   let indexHtml = fs.readFileSync(indexPath, "utf8");
 
-  fs.readdirSync(produtosDir).forEach(file => {
-    if (!file.endsWith(".html")) return;
-    const base = path.basename(file, ".html");
-    const regex = new RegExp(`<a[^>]+href=["'][^"']*${base}[^"']*["'][^>]*>.*?Comprar.*?<\\/a>`, "i");
-    const novo = `<a class="btn" href="checkout/${base}-checkout.html">Comprar</a>`;
-    indexHtml = indexHtml.replace(regex, novo);
+  // remove duplicação de scripts antigos
+  indexHtml = indexHtml.replace(/<script id="loja-script">[\s\S]*?<\/script>/, "");
+
+  // adiciona modal global e pesquisa
+  const modalScript = `
+<script id="loja-script">
+function adicionarCarrinho(prod){
+  let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+  carrinho.push(prod);
+  localStorage.setItem("carrinho", JSON.stringify(carrinho));
+  alert("Produto adicionado!");
+}
+function pesquisarProduto(){
+  const termo = document.getElementById("searchInput").value.toLowerCase();
+  const itens = document.querySelectorAll(".produto");
+  itens.forEach(el=>{
+    const nome = el.innerText.toLowerCase();
+    el.style.display = nome.includes(termo) ? "" : "none";
   });
-
-  // adiciona modal global de carrinho + pesquisa (se não existir)
-  if (!indexHtml.includes("id=\"cartModal\"")) {
-    indexHtml += `
-<!-- Modal Carrinho -->
-<div id="cartModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
-  <div style="background:#fff;padding:20px;border-radius:12px;max-width:500px;width:90%">
-    <h2>Produto adicionado!</h2>
-    <button onclick="location.href='checkout/checkout.html'">Ir para Checkout</button>
-    <button onclick="document.getElementById('cartModal').style.display='none'">Continuar comprando</button>
-  </div>
-</div>
-
-<script>
-function abrirCarrinho(){
-  document.getElementById("cartModal").style.display="flex";
 }
 </script>`;
+
+  if (!indexHtml.includes("id=\"loja-script\"")) {
+    indexHtml = indexHtml.replace("</body>", modalScript + "\n</body>");
   }
 
   fs.writeFileSync(indexPath, indexHtml, "utf8");
   console.log("✔ Index atualizado");
 }
 
-// ==================== PUSH PRO GITHUB ====================
+// faz push pro github (force)
 try {
-  execSync("git add . && git commit -m 'Atualiza loja com checkout/carrinho' && git push origin main --force", {stdio:"inherit"});
+  execSync("git add . && git commit -m 'Atualiza loja com checkout e carrinho' && git push origin main --force", {stdio:"inherit"});
   console.log("✔ Alterações enviadas pro GitHub com force");
 } catch (err) {
   console.error("⚠ Erro ao enviar pro GitHub:", err.message);
