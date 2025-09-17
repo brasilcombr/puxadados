@@ -1,49 +1,34 @@
-#!/bin/bash
-# Caminho da pasta com o site
-PASTA="melu_site"
+<script>
+// ========== CORRIGE BOTÕES DE COMPRA ==========
+document.addEventListener("DOMContentLoaded", () => {
+  // pega todos os botões que têm classe .btn e texto "Comprar"
+  document.querySelectorAll("a.btn, button.btn").forEach(btn => {
+    if (btn.textContent.trim().toLowerCase() === "comprar") {
+      btn.addEventListener("click", e => {
+        e.preventDefault();
 
-# Corrige todos os arquivos HTML da pasta (recursivamente)
-find "$PASTA" -type f -name "*.html" | while read -r FILE; do
-  echo "🔧 Corrigindo $FILE"
+        // pega dados do produto (ajuste se os nomes mudarem)
+        const card = btn.closest(".product, .item, .produto, div");
+        const nome = card?.querySelector(".name, h2, h3")?.innerText || "Produto";
+        const preco = card?.querySelector(".price, .preco")?.innerText || "0,00";
+        const img = card?.querySelector("img")?.getAttribute("src") || "sem-imagem.png";
 
-  # Corrige botões de comprar -> modal.html
-  sed -i "s|<a class=\"btn\"[^>]*onclick=\"adicionarCarrinho('\([^']*\)','\([^']*\)','\([^']*\)')\"[^>]*>Comprar</a>|<a class=\"btn\" href=\"modal.html?nome=\1&preco=\2&img=\3\">Comprar</a>|g" "$FILE"
+        // redireciona para o modal com parâmetros
+        window.location.href = `modal.html?nome=${encodeURIComponent(nome)}&preco=${encodeURIComponent(preco)}&img=${encodeURIComponent(img)}`;
+      });
+    }
+  });
 
-  # Remove buscas externas
-  sed -i "s|https://www.melumaquiagem.com.br/||g" "$FILE"
-  sed -i "s|http://www.melumaquiagem.com.br/||g" "$FILE"
+  // ========== CORRIGE FORMULÁRIO DE BUSCA ==========
+  const formBusca = document.querySelector("form[action*='melumaquiagem.com.br']");
+  if (formBusca) {
+    formBusca.removeAttribute("action"); // tira a URL antiga
+    formBusca.addEventListener("submit", e => {
+      e.preventDefault();
+      const termo = formBusca.querySelector("input[type='text'], input[name='q']")?.value || "";
+      window.location.href = "buscar.html?q=" + encodeURIComponent(termo);
+    });
+  }
+});
+</script>
 
-  # Adiciona campo de pesquisa (só no index)
-  if [[ "$FILE" == *"index.html" ]]; then
-    if ! grep -q "id=\"searchInput\"" "$FILE"; then
-      sed -i '/<header>/a \
-<div style="text-align:center;margin:20px;">\n\
-  <input type="text" id="searchInput" placeholder="🔍 Buscar produtos..." onkeyup="pesquisarProduto()" style="padding:10px;width:80%;max-width:400px;border:1px solid #ddd;border-radius:8px;">\n\
-</div>' "$FILE"
-    fi
-  fi
-
-  # Insere script de busca local antes de </body>
-  if ! grep -q "function pesquisarProduto" "$FILE"; then
-    sed -i '/<\/body>/i \
-<script>\n\
-function pesquisarProduto(){\n\
-  const termo = document.getElementById("searchInput").value.toLowerCase();\n\
-  document.querySelectorAll(".produto").forEach(el=>{\n\
-    const nome = el.innerText.toLowerCase();\n\
-    el.style.display = nome.includes(termo) ? "" : "none";\n\
-  });\n\
-}\n\
-</script>' "$FILE"
-  fi
-done
-
-echo "✔ Botões corrigidos + Pesquisa adicionada no index.html"
-
-# Envia alterações pro GitHub com --force
-cd "$PASTA" || exit
-git add .
-git commit -m "Corrige botões de compra para modal.html e adiciona busca local no index"
-git push origin main --force
-
-echo "🚀 Alterações enviadas pro GitHub com sucesso!"
